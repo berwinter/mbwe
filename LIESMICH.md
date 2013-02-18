@@ -11,7 +11,7 @@ MyBook World Edition White Light Print Server
 * Testseitendruck
 * Drucker mit Webinterface hinzufügen
 
-Danke an **mad_ady** und **Fidatelo**> von [mybookworld.wikidot.com](http://mybookworld.wikidot.com/forum/t-180724/cups-on-mybook-we-white-light-a-torture#post-608513) für ihr Feedback!
+Danke an **mad_ady** und **Fidatelo** von [mybookworld.wikidot.com](http://mybookworld.wikidot.com/forum/t-180724/cups-on-mybook-we-white-light-a-torture#post-608513) für ihr Feedback!
 
 ## Vorbereitungen ##
 
@@ -38,8 +38,8 @@ Wobei cups-doc für das Webinterface von cups benötigt wird. In diesen Moment i
 
 Das Module wurde von mir aus den Western Digital Quellen kompiliert. Um euch diese Arbeit zu ersparen könnt ihr das Module hier herunterladen bitte nur Kernel 2.6.24.4 verwenden.
 
-	mkdir /lib/modules/2.6.24.4/kernel/drivers/usb/class/ <br>
-	wget http://members.aon.at/berwinter/mbwe/usblp.ko.whitelight -O /lib/modules/2.6.24.4/kernel/drivers/usb/class/usblp.ko 
+	mkdir /lib/modules/2.6.24.4/kernel/drivers/usb/class/
+	wget https://github.com/berwinter/mbwe/blob/master/modules/usblp.ko.whitelight?raw=true -O /lib/modules/2.6.24.4/kernel/drivers/usb/class/usblp.ko 
 
 Das Module kann jetzt mit insmod geladen werden. Allerdings werden dann die Datei rechte falsch vergeben. Dazu verwenden wir ein Startscript, dass bei Systemstart alle Einstellungen vornimmt und cups startet.
 
