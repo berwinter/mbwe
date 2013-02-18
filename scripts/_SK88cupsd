@@ -1,0 +1,31 @@
+#!/bin/sh 
+# 
+# 
+# 
+case "$1" in 
+        start) 
+                if ( [ ! -c /dev/lp0 ] ) then 
+                        mknod /dev/lp0 c 180 0 
+                fi 
+                /bin/chown sys:lp /dev/lp0 
+
+                if ( !(lsmod | grep "^usblp" -q) ); then 
+                         insmod /lib/modules/2.6.24.4/kernel/drivers/usb/class/usblp.ko 
+                fi 
+
+                if [ -n "`pidof cupsd`" ]; then 
+                        /usr/bin/killall cupsd 2>/dev/null 
+                fi 
+                /opt/sbin/cupsd
+                sleep 10
+                /opt/sbin/cupsenable HP-Deskjet-812c
+        ;; 
+        stop) 
+                if [ -n "`pidof cupsd`" ]; then 
+                        /usr/bin/killall cupsd 2>/dev/null 
+                fi 
+        ;; 
+        *) 
+                echo "Usage: (start|stop)" 
+                exit 1 
+esac
