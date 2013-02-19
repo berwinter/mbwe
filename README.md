@@ -1,49 +1,48 @@
 MyBook World Edition White Light Print Server
 ====
 
-**Mit Firmware 01.00.16, 01.00.18 und 01.01.16 getestet!**
+**Tested with Firmware 01.00.16, 01.00.18 and 01.01.16!**
 
 ### Updates: ###
 
-* Firmware 01.01.16 getestet
-* Firmware 01.00.18 getestet
-* Addgroup hinzugefügt
-* Testseitendruck
-* Drucker mit Webinterface hinzufügen
+* Firmware 01.01.16 tested
+* Firmware 01.00.18 tested
+* Addgroup for printing
+* Printer test page
+* Add printer with webinterface
 
-Danke an **mad_ady** und **Fidatelo** von [mybookworld.wikidot.com](http://mybookworld.wikidot.com/forum/t-180724/cups-on-mybook-we-white-light-a-torture#post-608513) für ihr Feedback!
+Thanks to **mad_ady** and **Fidatelo** from [mybookworld.wikidot.com](http://mybookworld.wikidot.com/forum/t-180724/cups-on-mybook-we-white-light-a-torture#post-608513) for their feedback!
 
-## Vorbereitungen ##
+## Preparations ##
 
-Als allererstes muss, wenn nicht bereits geschähen, SSH im Webinterface aktiviert werden. Dann kann man sich z.B. mit Putty auf der Konsole einloggen. (User: root / Passwort: welc0me)
-Zunächst wird die MBWE für Optware vorbereitet werden. Am einfachsten geht dies mit dem Script von Frater, das auch noch einige andere Optimierungen vornimmt:
+SSH must be activated on the MyBook through the web interface. Then you can connect to it with putty (user: root / password: welc0me).
+First of all, Optware will be installed on the MBWE. The easy way is by using Frater's script:
 
 	wget -O prep_whitelight http://wd.mirmana.com/prep_whitelight
 	sh prep_whitelight
 
-Dies nimmt einige Zeit in Anspruch und es werden viele Pakete heruntergeladen und installiert. Anschließend sollte Crond deaktiviert werden damit die Festplatten nicht alle 15 min anlaufen.
+The installation may take a while.
 
-## Installation von CUPS ##
+## CUPS installation ##
 
-Mittlerweile kann cups direkt aus den Paketquellen installiert werden und man muss nichts selber kompilieren. Einfach folgendes als root auf der MBWE Konsole ausführen:
+The necessary packages can be installed by the package management system:
 
 	/opt/bin/ipkg install cups
 	/opt/bin/ipkg install cups-pdf
 	/opt/bin/ipkg install cups-doc
 	/opt/bin/ipkg install cups-driver-gutenprint
 
-Wobei cups-doc für das Webinterface von cups benötigt wird. In diesen Moment ist cups bereits startfähig, allerdings kann es nicht die angeschlossenen USB Drucker finden. Dazu wird ein Kernelmodule benötigt.
+"cups-doc" is needed for the web configuration interface. To get the printer work with CUPS an additional kernel module is needed.
 
-## Kernelmodul installieren ##
+## Kernel module installation ##
 
-Das Module wurde von mir aus den Western Digital Quellen kompiliert. Um euch diese Arbeit zu ersparen könnt ihr das Module hier herunterladen bitte nur Kernel 2.6.24.4 verwenden.
+I compiled this module from the Western Digital kernel (2.6.24.4) sourcen. 
+The modules can be downloaded from GitHub:
 
 	mkdir /lib/modules/2.6.24.4/kernel/drivers/usb/class/
 	wget https://github.com/berwinter/mbwe/blob/master/modules/usblp.ko.whitelight?raw=true -O /lib/modules/2.6.24.4/kernel/drivers/usb/class/usblp.ko 
 
-Das Module kann jetzt mit insmod geladen werden. Allerdings werden dann die Datei rechte falsch vergeben. Dazu verwenden wir ein Startscript, dass bei Systemstart alle Einstellungen vornimmt und cups startet.
-
-Dazu erstellen wir die Datei /opt/etc/init.d/_SK88cupsd mit folgendem Inhalt:
+Now the module can be loaded with insmod. To do this on startup create a script with following content in /opt/etc/init.d/_SK88cupsd:
 
 	#!/bin/sh
 	#
@@ -75,19 +74,19 @@ Dazu erstellen wir die Datei /opt/etc/init.d/_SK88cupsd mit folgendem Inhalt:
 		        exit 1
 	esac
 
-Abschließend noch ausführbar machen und die Startup und Shutdown links setzen:
+Create symbolic links for startup and shutdown:
 
 	chmod +x _SK88cupsd
 	ln -s _SK88cupsd S88cupsd
 	ln -s _SK88cupsd K88cupsd
 
-Eventuell muss noch die Gruppe lp angelegt werden (wenn noch nicht vorhanden):
+Add the group lp for printing permissions:
 
 	addgroup lp
 
-## CUPS konfigurieren ##
+## Configure CUPS ##
 
-Dazu die Datei /opt/etc/cups/cupsd.conf öffnen und entsprechend ändern:
+The config of CUPS is stored in /opt/etc/cups/cupsd.conf
 
 	# Show general information in error_log.
 	LogLevel info
@@ -134,18 +133,17 @@ Dazu die Datei /opt/etc/cups/cupsd.conf öffnen und entsprechend ändern:
 	  # Allow @LOCAL
 	</Location>
 
-wobei alle Zeilen mit Allow From 10.0.0.0/16 an das eigne Netzwerk angepasst werden müssen.
+Please change the lines with 10.0.0.0/16 to your network.
 
-Nun sollte sich Cups mit:
+Start CUPS:
 
 	/opt/etc/init.d/S88cupsd start
 
-ohne Fehler starten und unter: http://<ip_mbwe>:631/ beobachten lassen.
+Check http://<ip_mbwe>:631/ for errors.
 
-## Drucker konfigurieren ##
+## Printer configuration ##
 
-Nun geh's an die Drucker Konfiguration in der Datei /opt/etc/cups/printers.conf 
-Meine sieht für den Brother HL 2030 folgender Maßen aus:
+The printer configuration is stored in /opt/etc/cups/printers.conf
 
 	<DefaultPrinter Brother_HL2030>
 		Info Brother 2030 series
@@ -163,92 +161,89 @@ Meine sieht für den Brother HL 2030 folgender Maßen aus:
 		ErrorPolicy stop-printer
 	</Printer>
 
-wichtig ist hierbei die Zeile DeviceURI parallel:/dev/lp0 die angibt, wo der Drucker angeschlossen ist.
+The important line is DeviceURI parallel:/dev/lp0, which is the printer interface.
 
-## Über das Webinterface ##
+## Add printer (Webinterface) ##
 
-Es besteht auch die Möglichkeit den Drucker über das Webinterface hinzuzufügen.
-Dazu das Webinterface im Browser öffnen: http://<ip_mbwe>:631/
+You can also add a printer over the web interface (http://<ip_mbwe>:631/):
 
-Administartion > Add printer > Name eingeben > LPD/LPR Host or Printer auswählen > Device URI: parallel:/dev/lp0 > Raw > Raw Query
+Administartion > Add printer > enter name > LPD/LPR Host or Printer > Device URI: parallel:/dev/lp0 > Raw > Raw Query
 
-![Drucker hinzufügen](./doc/addprinter.png)
+![Add printer](./doc/addprinter.png)
 
-![Optionen](./doc/raw.png)
-
-Nun können die Clients eingerichtet werden:
+![Options](./doc/raw.png)
 
 ## MacOSX Client ##
 
-Bei Systemeinstellungen > Drucker einen neuen Drucker hinzufügen:
+System Settings > Printer > Add Printer:
 
-![Schritt 1](./doc/mac_pic1.png)
+![Step 1](./doc/mac_pic1.png)
 
-IP auswählen und bei Protokoll Internet Printing Protocol  - IPP
+Choose IP and Internet Printing Protocol  - IPP
 
-IP Adresse der MBWE angeben und bei Warteliste /printers/<Druckername>
+Enter the IP Address of your MBWE and select the queue /printers/<Druckername>
 
-![Schritt 2](./doc/mac_pic2.png)
+![Step 2](./doc/mac_pic2.png)
 
-Abschließend noch den Treiber auswählen und auf Hinzufügen klicken!
+Finally select a driver for your printer.
 
 ## Ubuntu Client ##
 
-System > Systemverwaltung > Drucken > neu > Netzwerkdrucker
+System > Administration > Printer > New > Network Printer
 
-![Schritt 1](./doc/ub_pic1.png)
+![Step 1](./doc/ub_pic1.png)
 
 Internet Printing Protocol 
-IP Adresse der MBWE angeben und bei Warteliste /printers/<Druckername>
+Enter the IP Address of your MBWE and select the queue /printers/<Druckername>
 
-![Schritt 2](./doc/ub_pic2.png)
+![Step 2](./doc/ub_pic2.png)
 
-Treiber auswählen
+Select driver:
 
-![Schritt 3](./doc/ub_pic3.png)
+![Step 3](./doc/ub_pic3.png)
 
-fertig
 
-![Schritt 4](./doc/ub_pic4.png)
+![Step 4](./doc/ub_pic4.png)
 
 ## Windows XP Client ##
 
-Start > Drucker und Faxgeräte > Drucker hinzufügen > Weiter
+Start > Printers and Faxes > Add Printer > Next
 
 ![Schritt 1](./doc/xp_pic1.png)
 
-Netzwerkdrucker ... > weiter > Verbindung mit einem Drucker im Internet ...
+Network Printer ... > next > Connect to printer over the internet ...
 http://<ip_mbwe>:631/printers/<Druckername>
 
-![Schritt 2](./doc/xp_pic2.png)
+![Step 2](./doc/xp_pic2.png)
 
-weiter > Treiber auswählen
+next > select driver
 
-![Schritt 3](./doc/xp_pic3.png)
+![Step 3](./doc/xp_pic3.png)
 
-weiter > fertig
+next > finish
 
-![Schritt 4](./doc/xp_pic4.png)
+![Step 4](./doc/xp_pic4.png)
 
 ## Windows Vista Client ##
 
-Start > Geräte und Drucker > Drucker hinzufügen
+Start > Devices and Printers > Add Printer
 
-![Schritt 1](./doc/vista_pic1.png)
+![Step 1](./doc/vista_pic1.png)
 
-Netzwerkdrucker > Der gesuchte Drucker ist nicht angeführt > Einen freigebenen Drucker über den Namen auswählen http://<ip_mbwe>:631/printers/<Druckername> eingeben
+Network Printer ... > next > Connect to printer over the internet ...
+http://<ip_mbwe>:631/printers/<Druckername> eingeben
 
-![Schritt 2](./doc/vista_pic2.png)
+![Step 2](./doc/vista_pic2.png)
 
-weiter > Treiber auswählen
+next > select driver
 
-![Schritt 3](./doc/vista_pic3.png)
+![Step 3](./doc/vista_pic3.png)
 
-weiter > fertig
+next > finish
 
 ## Tips and Tricks ##
 
-Wenn die Druckerwarteschlange nach einen Neustart gestoppt bleibt, sollte /opt/etc/init.d/_SK88cupsd  folgendermaßen geändert werden: (Danke an Fidatelo)
+If the queue ist stopped after restart, you can solve the problem with following modification in /opt/etc/init.d/_SK88cupsd (Thanks to Fidatelo)
 
 	#!/bin/sh 
 	# 
@@ -282,9 +277,7 @@ Wenn die Druckerwarteschlange nach einen Neustart gestoppt bleibt, sollte /opt/e
 		        exit 1 
 	esac
 
-Wobei der Druckername durch den eigenen zu ersetzen ist. Nach dem Start von Cupsd wird 10 Sekunden gewartet und anschließen die Warteschlange gestartet.
-
-## Kontakt ##
+## Contact ##
 
 Bertram Winter
 bertram.winter@gmail.com
